@@ -339,7 +339,7 @@ client.on('raided', (channel, username, viewers) => {
 
 // fetch channelinfo and set to userCountElement, update every 30 seconds
 function updateUserCount() {
-    fetch(`http://localhost:3000/api/channelinfo`)
+    fetch(`https://projektion-twitch-usercount.herokuapp.com/api/channelinfo`)
         .then((res) => res.json())
         .then(({ viewer_count }) => {
             userCountElement.textContent = viewer_count;
