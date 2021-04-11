@@ -3,6 +3,8 @@ const usersElement = document.querySelector('#users');
 const statusElement = document.querySelector('#status');
 const countElement = document.querySelector('#count');
 
+const userCountElement = document.querySelector('#usercount');
+
 const params = new URLSearchParams(window.location.search);
 const channel = params.get('channel') || 'd7gr';
 const addhour = Number(params.get('addhours')) || 0;
@@ -16,6 +18,7 @@ const client = new tmi.Client({
 
 client.connect().then(() => {
     console.log(`Listening for messages in ${channel}...`);
+    updateUserCount();
 });
 
 let users = {};
@@ -333,3 +336,16 @@ client.on('raided', (channel, username, viewers) => {
     msgsElement.prepend(container);
     updateMessageBuffer();
 });
+
+// fetch channelinfo and set to userCountElement, update every 30 seconds
+function updateUserCount() {
+    fetch(`https://projektion-twitch-usercount.herokuapp.com/api/channelinfo`)
+        .then((res) => res.json())
+        .then(({ viewer_count }) => {
+            userCountElement.textContent = viewer_count;
+        })
+        .catch((err) => {
+            console.error('Error fetching user count', err);
+        });
+}
+setTimeout(updateUserCount, 30000);
