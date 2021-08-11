@@ -1,3 +1,25 @@
+/**
+ * polyfills
+ */
+
+
+ if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(searchString, position) {
+        var subjectString = this.toString();
+        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+          position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
+  }
+
+/**
+ * the real code :)
+ */  
+
+
 const msgsElement = document.querySelector('#msgs');
 const usersElement = document.querySelector('#users');
 const statusElement = document.querySelector('#status');
@@ -144,7 +166,8 @@ client.on('message', (wat, tags, message, self) => {
     const { color } = tags;
     const { 'display-name': displayName } = tags;
 
-    if (username.includes('bot')) return;
+    
+    if (username.toLowerCase().endsWith('bot')) return;
 
     // the cleaned html message - removed html messages
 
