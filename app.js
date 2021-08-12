@@ -338,14 +338,26 @@ client.on('raided', (channel, username, viewers) => {
 });
 
 // fetch channelinfo and set to userCountElement, update every 30 seconds
+
+let updateUserCountHandle;
+
 function updateUserCount() {
-    fetch(`https://projektion-twitch-usercount.herokuapp.com/api/channelinfo`)
+    fetch(`https://projektion-twitch-usercount.herokuapp.com/api/channelinfo?channel=${channel}`)
         .then((res) => res.json())
-        .then(({ viewer_count }) => {
-            userCountElement.textContent = viewer_count;
+        .then(({ status, viewer_count }) => {
+            if (status === 403) {
+                if (updateUserCountHandle) {
+                    console.log('Clearing Interval');
+                    clearInterval(updateUserCountHandle);
+                }
+            } else {
+                userCountElement.style.display = 'inherit';
+                let valueElement = document.querySelector('#usercount > span');
+                valueElement.textContent = viewer_count;
+            }
         })
         .catch((err) => {
-            console.error('Error fetching user count', err);
+            console.error('Error occured', err);
         });
 }
-setInterval(updateUserCount, 30000);
+updateUserCountHandle = setInterval(updateUserCount, 30000);

@@ -59,3 +59,7 @@ input, textarea, button, p, div, section, article, select {
     right: 20px;
     text-align: right;
 }
+
+#meta > #usercount {
+    display: none;
+}
