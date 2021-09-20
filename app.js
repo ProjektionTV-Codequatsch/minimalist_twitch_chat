@@ -88,9 +88,19 @@ function createTimeElement() {
     return containerTime;
 }
 
-function createUserElement(username, displayName, colour) {
-    let containerUser = createSpanElement(displayName);
-    containerUser.style.color = getUserColour(username, colour);
+function createUserElement(username, displayName, colour, role) {
+    let containerUser;
+
+    if (role == "moderator") {
+        containerUser = createUnsafeSpanElement("<span class='moderator'></span>" + displayName);
+        containerUser.style.color = getUserColour(username, colour);
+    } else if (role == "vip") {
+        containerUser = createUnsafeSpanElement("<span class='vip'></span>" + displayName);
+        containerUser.style.color = getUserColour(username, colour);
+    } else {
+        containerUser = createSpanElement(displayName);
+        containerUser.style.color = getUserColour(username, colour);
+    }
 
     return containerUser;
 }
@@ -143,28 +153,15 @@ function sanitizeHTML(text) {
 client.on('message', (wat, tags, message, self) => {
     if (self) return;
     const { username } = tags;
+    const { badges } = tags;
     const { color } = tags;
     const { 'display-name': displayName } = tags;
+    let role = "";
 
 	if ((username.toLowerCase().endsWith('bot')) && (!username.toLowerCase().endsWith('robot'))) return;
 
-    if(message == '1') return;
-    if(message == '2') return;
-    if(message == '3') return;
-    if(message == '4') return;
-    if(message == '5') return;
-    if(message == '6') return;
-    if(message == '7') return;
-    if(message == '8') return;
-    if(message == '9') return;
-
-    if(message.toLowerCase() == 'a') return;
-    if(message.toLowerCase() == 'b') return;
-    if(message.toLowerCase() == 'c') return;
-    if(message.toLowerCase() == 'd') return;
-    if(message.toLowerCase() == 'e') return;
-    if(message.toLowerCase() == 'f') return;
-    if(message.toLowerCase() == 'g') return;
+    let regex = new RegExp("^[abcdefg123456789]$", "i");
+    if (regex.test(message.toLowerCase())) return;
 
     if(message.startsWith('!')) return;
 
@@ -178,7 +175,9 @@ client.on('message', (wat, tags, message, self) => {
     let containerTime = createTimeElement();
 
     // Username
-    let containerUser = createUserElement(username, displayName, color);
+    if (badges !== null && typeof badges.moderator !== 'undefined' && badges.moderator == 1) role = "moderator";
+    if (badges !== null && typeof badges.vip !== 'undefined' && badges.vip == 1) role = "vip";
+    let containerUser = createUserElement(username, displayName, color, role);
 
     // Message - enriched with emotes via getMessages, based on the escaped message
     let containerMsg = createUnsafeSpanElement(getMessageHTML(message, tags));
