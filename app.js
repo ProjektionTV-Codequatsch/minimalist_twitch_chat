@@ -1,25 +1,3 @@
-/**
- * polyfills
- */
-
-
- if (!String.prototype.endsWith) {
-    String.prototype.endsWith = function(searchString, position) {
-        var subjectString = this.toString();
-        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
-          position = subjectString.length;
-        }
-        position -= searchString.length;
-        var lastIndex = subjectString.indexOf(searchString, position);
-        return lastIndex !== -1 && lastIndex === position;
-    };
-  }
-
-/**
- * the real code :)
- */  
-
-
 const msgsElement = document.querySelector('#msgs');
 const usersElement = document.querySelector('#users');
 const statusElement = document.querySelector('#status');
@@ -28,8 +6,10 @@ const countElement = document.querySelector('#count');
 const userCountElement = document.querySelector('#usercount');
 
 const params = new URLSearchParams(window.location.search);
-const channel = params.get('channel') || 'd7gr';
+const channel = params.get('channel') || 'projektiontv';
 const addhour = Number(params.get('addhours')) || 0;
+const maxlines = Number(params.get('maxlines')) || 200;
+
 const client = new tmi.Client({
     connection: {
         secure: true,
@@ -70,7 +50,7 @@ function toggleDarkMode() {
 function updateMessageBuffer() {
     // Count the messages and start deleting old ones after threshold is reached
     msgCounter += 1;
-    if (msgCounter >= 30) {
+    if (msgCounter >= maxlines) {
         msgsElement.removeChild(msgsElement.lastChild);
         //console.log(msgCounter + ' | 30');
     } else {
@@ -166,8 +146,29 @@ client.on('message', (wat, tags, message, self) => {
     const { color } = tags;
     const { 'display-name': displayName } = tags;
 
-    
-    if (username.toLowerCase().endsWith('bot')) return;
+	if ((username.toLowerCase().endsWith('bot')) && (!username.toLowerCase().endsWith('robot'))) return;
+
+    if(message == '1') return;
+    if(message == '2') return;
+    if(message == '3') return;
+    if(message == '4') return;
+    if(message == '5') return;
+    if(message == '6') return;
+    if(message == '7') return;
+    if(message == '8') return;
+    if(message == '9') return;
+
+    if(message.toLowerCase() == 'a') return;
+    if(message.toLowerCase() == 'b') return;
+    if(message.toLowerCase() == 'c') return;
+    if(message.toLowerCase() == 'd') return;
+    if(message.toLowerCase() == 'e') return;
+    if(message.toLowerCase() == 'f') return;
+    if(message.toLowerCase() == 'g') return;
+
+    if(message.startsWith('!')) return;
+
+	console.log(message);
 
     // the cleaned html message - removed html messages
 
@@ -361,26 +362,14 @@ client.on('raided', (channel, username, viewers) => {
 });
 
 // fetch channelinfo and set to userCountElement, update every 30 seconds
-
-let updateUserCountHandle;
-
 function updateUserCount() {
     fetch(`https://projektion-twitch-usercount.herokuapp.com/api/channelinfo?channel=${channel}`)
         .then((res) => res.json())
-        .then(({ status, viewer_count }) => {
-            if (status === 403) {
-                if (updateUserCountHandle) {
-                    console.log('Clearing Interval');
-                    clearInterval(updateUserCountHandle);
-                }
-            } else {
-                userCountElement.style.display = 'inherit';
-                let valueElement = document.querySelector('#usercount > span');
-                valueElement.textContent = viewer_count;
-            }
+        .then(({ viewer_count }) => {
+            userCountElement.textContent = viewer_count;
         })
         .catch((err) => {
-            console.error('Error occured', err);
+            console.error('Error fetching user count', err);
         });
 }
-updateUserCountHandle = setInterval(updateUserCount, 30000);
+setInterval(updateUserCount, 30000);
