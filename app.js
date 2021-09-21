@@ -1,3 +1,23 @@
+/**
+ * polyfills
+ */
+
+if (!String.prototype.endsWith) {
+    String.prototype.endsWith = function(searchString, position) {
+        var subjectString = this.toString();
+        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+            position = subjectString.length;
+        }
+        position -= searchString.length;
+        var lastIndex = subjectString.indexOf(searchString, position);
+        return lastIndex !== -1 && lastIndex === position;
+    };
+}
+
+/**
+ * the real code :)
+ */
+
 const msgsElement = document.querySelector('#msgs');
 const usersElement = document.querySelector('#users');
 const statusElement = document.querySelector('#status');
@@ -158,14 +178,14 @@ client.on('message', (wat, tags, message, self) => {
     const { 'display-name': displayName } = tags;
     let role = "";
 
+    // Hide Bot-messages
 	if ((username.toLowerCase().endsWith('bot')) && (!username.toLowerCase().endsWith('robot'))) return;
 
+    // Filter messages from 4 wins and tic tac toe
     let regex = new RegExp("^[abcdefg123456789]$", "i");
     if (regex.test(message.toLowerCase())) return;
 
     if(message.startsWith('!')) return;
-
-	console.log(message);
 
     // the cleaned html message - removed html messages
 
@@ -361,14 +381,25 @@ client.on('raided', (channel, username, viewers) => {
 });
 
 // fetch channelinfo and set to userCountElement, update every 30 seconds
+let updateUserCountHandle;
 function updateUserCount() {
     fetch(`https://projektion-twitch-usercount.herokuapp.com/api/channelinfo?channel=${channel}`)
         .then((res) => res.json())
-        .then(({ viewer_count }) => {
-            userCountElement.textContent = viewer_count;
+        .then(({ status, viewer_count }) => {
+            if (status === 403) {
+                if (updateUserCountHandle) {
+                    console.log('Clearing Interval');
+                    clearInterval(updateUserCountHandle);
+                    userCountElement.style.display = 'none';
+                }
+            } else {
+                userCountElement.style.display = 'inherit';
+                let valueElement = document.querySelector('#usercount > span');
+                valueElement.textContent = viewer_count;
+            }
         })
         .catch((err) => {
             console.error('Error fetching user count', err);
         });
 }
-setInterval(updateUserCount, 30000);
+updateUserCountHandle = setInterval(updateUserCount, 30000);
