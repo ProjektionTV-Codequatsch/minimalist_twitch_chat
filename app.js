@@ -179,7 +179,7 @@ client.on('message', (wat, tags, message, self) => {
     let role = "";
 
     // Hide Bot-messages
-	if ((username.toLowerCase().endsWith('bot')) && (!username.toLowerCase().endsWith('robot'))) return;
+    if ((username.toLowerCase().endsWith('bot')) && (!username.toLowerCase().endsWith('robot'))) return;
 
     // Filter messages from 4 wins and tic tac toe
     let regex = new RegExp("^[abcdefg123456789]$", "i");
