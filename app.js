@@ -2,23 +2,21 @@
  * polyfills
  */
 
-
- if (!String.prototype.endsWith) {
+if (!String.prototype.endsWith) {
     String.prototype.endsWith = function(searchString, position) {
         var subjectString = this.toString();
         if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
-          position = subjectString.length;
+            position = subjectString.length;
         }
         position -= searchString.length;
         var lastIndex = subjectString.indexOf(searchString, position);
         return lastIndex !== -1 && lastIndex === position;
     };
-  }
+}
 
 /**
  * the real code :)
- */  
-
+ */
 
 const msgsElement = document.querySelector('#msgs');
 const usersElement = document.querySelector('#users');
@@ -28,8 +26,10 @@ const countElement = document.querySelector('#count');
 const userCountElement = document.querySelector('#usercount');
 
 const params = new URLSearchParams(window.location.search);
-const channel = params.get('channel') || 'd7gr';
+const channel = params.get('channel') || 'projektiontv';
 const addhour = Number(params.get('addhours')) || 0;
+const maxlines = Number(params.get('maxlines')) || 200;
+
 const client = new tmi.Client({
     connection: {
         secure: true,
@@ -70,7 +70,7 @@ function toggleDarkMode() {
 function updateMessageBuffer() {
     // Count the messages and start deleting old ones after threshold is reached
     msgCounter += 1;
-    if (msgCounter >= 30) {
+    if (msgCounter >= maxlines) {
         msgsElement.removeChild(msgsElement.lastChild);
         //console.log(msgCounter + ' | 30');
     } else {
@@ -108,9 +108,19 @@ function createTimeElement() {
     return containerTime;
 }
 
-function createUserElement(username, displayName, colour) {
-    let containerUser = createSpanElement(displayName);
-    containerUser.style.color = getUserColour(username, colour);
+function createUserElement(username, displayName, colour, role) {
+    let containerUser;
+
+    if (role == "moderator") {
+        containerUser = createUnsafeSpanElement("<span class='moderator'></span>" + displayName);
+        containerUser.style.color = getUserColour(username, colour);
+    } else if (role == "vip") {
+        containerUser = createUnsafeSpanElement("<span class='vip'></span>" + displayName);
+        containerUser.style.color = getUserColour(username, colour);
+    } else {
+        containerUser = createSpanElement(displayName);
+        containerUser.style.color = getUserColour(username, colour);
+    }
 
     return containerUser;
 }
@@ -163,11 +173,19 @@ function sanitizeHTML(text) {
 client.on('message', (wat, tags, message, self) => {
     if (self) return;
     const { username } = tags;
+    const { badges } = tags;
     const { color } = tags;
     const { 'display-name': displayName } = tags;
+    let role = "";
 
-    
-    if (username.toLowerCase().endsWith('bot')) return;
+    // Hide Bot-messages
+    if ((username.toLowerCase().endsWith('bot')) && (!username.toLowerCase().endsWith('robot'))) return;
+
+    // Filter messages from 4 wins and tic tac toe
+    let regex = new RegExp("^[abcdefg123456789]$", "i");
+    if (regex.test(message.toLowerCase())) return;
+
+    if(message.startsWith('!')) return;
 
     // the cleaned html message - removed html messages
 
@@ -177,7 +195,9 @@ client.on('message', (wat, tags, message, self) => {
     let containerTime = createTimeElement();
 
     // Username
-    let containerUser = createUserElement(username, displayName, color);
+    if (badges !== null && typeof badges.moderator !== 'undefined' && badges.moderator == 1) role = "moderator";
+    if (badges !== null && typeof badges.vip !== 'undefined' && badges.vip == 1) role = "vip";
+    let containerUser = createUserElement(username, displayName, color, role);
 
     // Message - enriched with emotes via getMessages, based on the escaped message
     let containerMsg = createUnsafeSpanElement(getMessageHTML(message, tags));
@@ -361,9 +381,7 @@ client.on('raided', (channel, username, viewers) => {
 });
 
 // fetch channelinfo and set to userCountElement, update every 30 seconds
-
 let updateUserCountHandle;
-
 function updateUserCount() {
     fetch(`https://projektion-twitch-usercount.herokuapp.com/api/channelinfo?channel=${channel}`)
         .then((res) => res.json())
@@ -372,6 +390,7 @@ function updateUserCount() {
                 if (updateUserCountHandle) {
                     console.log('Clearing Interval');
                     clearInterval(updateUserCountHandle);
+                    userCountElement.style.display = 'none';
                 }
             } else {
                 userCountElement.style.display = 'inherit';
@@ -380,7 +399,7 @@ function updateUserCount() {
             }
         })
         .catch((err) => {
-            console.error('Error occured', err);
+            console.error('Error fetching user count', err);
         });
 }
 updateUserCountHandle = setInterval(updateUserCount, 30000);

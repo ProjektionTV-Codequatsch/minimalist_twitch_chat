@@ -60,6 +60,24 @@ input, textarea, button, p, div, section, article, select {
     text-align: right;
 }
 
-#meta > #usercount {
-    display: none;
+.moderator {
+    color: rgb(255,255,255);
+    background: url("assets/icons/moderator.svg") rgb(52,174,10);
+    background-size: 1.6rem;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 0.2rem;
+    padding-left: 2rem;
+    margin-right: 0.5rem;
+}
+
+.vip {
+    color: rgb(255,255,255);
+    background: url("assets/icons/vip.svg") rgb(179,63,240);
+    background-size: 1.6rem;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 0.2rem;
+    padding-left: 2rem;
+    margin-right: 0.5rem;
 }
